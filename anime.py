@@ -18,43 +18,56 @@ def preprocess_data(anime, verbose=True):
 		print('Dataset before preprocessing')
 		print(anime.head())
 
-	anime['name'].str.replace('&#039;', '\'', regex=False)
+	anime['title'] = anime['title'].str.replace('&#039;', '\'', regex=False)
 
 	anime.loc[(anime['type'] == 'OVA') & (anime['episodes'] == 'Unknown'), 'episodes'] = '1'
 	anime.loc[(anime['genre'] == 'Hentai') & (anime['episodes'] == 'Unknown'), 'episodes'] = '1'
 	anime.loc[(anime['type'] == 'Movie') & (anime['episodes'] == 'Unknown'), 'episodes'] = '1'
 
-	known_anime_episodes = {'Naruto: Shippuuden': 500, 'One Piece': 784, 'Detective Conan': 854, 
-							'Dragon Ball Super': 86, 'Crayon Shin-chan': 942, 'Yu☆Gi☆Oh! Arc-V': 148,
-							'Shingeki no Kyojin Season 2': 25, 'Boku no Hero Academia 2nd Season': 25,
-							'Little Witch Academia (TV)': 25}
-
-	if verbose:
-		print_known_animes_and_current_episodes(known_anime_episodes, anime)
-
-	for k, v in known_anime_episodes.items():
-		anime.loc[anime['name'] == k, 'episodes'] = v
-
-	if verbose:
-		print_known_animes_and_current_episodes(known_anime_episodes, anime)
-
-	anime['episodes'] = anime['episodes'].map(lambda x: np.nan if x == 'Unknown' else x)
-	anime['episodes'].fillna(anime['episodes'].median(), inplace = True)
+	anime.drop('title_synonyms', 1, inplace=True)
+	anime.drop('title_japanese', 1, inplace=True)
+	anime.drop('title_english', 1, inplace=True)
+	anime.drop('image_url', 1, inplace=True)
+	anime.drop('status', 1, inplace=True)
+	anime.drop('airing', 1, inplace=True)
+	anime.drop('aired_string', 1, inplace=True)
+	anime.drop('background', 1, inplace=True)
+	anime.drop('broadcast', 1, inplace=True)
+	anime.drop('producer', 1, inplace=True)
+	anime.drop('licensor', 1, inplace=True)
+	anime.drop('opening_theme', 1, inplace = True)
+	anime.drop('ending_theme', 1, inplace = True)
+	anime.drop('duration', 1, inplace = True)
+	anime.drop('related', 1, inplace = True)
+	anime.drop('aired', 1, inplace = True)
+	anime.drop('premiered', 1, inplace = True)
+	anime.drop('studio', 1, inplace = True)
 
 	dummies = pd.get_dummies(anime[['type']])
 
-	anime['rating'] = anime['rating'].astype(float)
-	anime['rating'].fillna(anime['rating'].median(), inplace = True)
+	anime['score'] = anime['score'].astype(float)
+	anime['score'].fillna(anime['score'].median(), inplace = True)
+	anime['rank'].fillna(anime['rank'].median(), inplace = True)
 	anime['members'] = anime['members'].astype(float)
 
 	anime.dropna(subset=['anime_id'], inplace=True)
-	
+	print(anime.columns)
 	anime['anime_id'] = anime['anime_id'].astype(int)
 	# Scaling
 	anime['genre'] = anime['genre'].str.replace(" ", "")
 	anime_features = pd.concat([anime['genre'].str.get_dummies(sep=','),
 								pd.get_dummies(anime[['type']]),
-								anime[['rating']], anime[['members']], anime['episodes']], axis=1)
+								pd.get_dummies(anime[['rating']]),
+								pd.get_dummies(anime[['source']]),
+								anime[['scored_by']],
+								anime[['rank']],
+								anime[['popularity']],
+								anime[['members']], anime[['favorites']],
+								anime[['duration_min']],
+								anime[['aired_from_year']], anime[['score']],
+								anime[['members']],
+								anime[['episodes']]],
+								axis=1)
 
 	if verbose:
 		print('==================Anime features==================')
@@ -74,22 +87,22 @@ def preprocess_data(anime, verbose=True):
 
 	return (anime, anime_features)
 
-def get_index_from_name(anime, name):
-	return anime[anime['name'] == name].index.tolist()[0]
+def get_index_from_title(anime, title):
+	return anime[anime['title'] == title].index.tolist()[0]
 
-def get_index_from_partial_name(anime, partial_name):
-	for name in list(anime.name.values):
-		if partial_name in name:
-			print(name, get_index_from_name(anime, name))
+def get_index_from_partial_title(anime, partial_title):
+	for name in list(anime.title.values):
+		if partial_title in title:
+			print(title, get_index_from_title(anime, title))
 
 def print_similar_animes(indices, anime, query=None, id=None):
 	if id:
 		for id in indices[id][1:]:
-			print(anime.loc[id]['name'])
+			print(anime.loc[id]['title'])
 	if query:
-		found_id = get_index_from_name(anime, query)
+		found_id = get_index_from_title(anime, query)
 		for id in indices[found_id][1:]:
-			print(anime.loc[id]['name'])
+			print(anime.loc[id]['title'])
 
 def train_knn_model(anime_data, anime_features):
 	nbrs = NearestNeighbors(n_neighbors=6, algorithm='ball_tree').fit(anime_features)
@@ -100,8 +113,8 @@ def train_knn_model(anime_data, anime_features):
 
 
 if __name__ == '__main__':
-	anime_data = pd.read_csv("data/anime.csv", sep=',')
-	anime_data, anime_features = preprocess_data(anime_data, verbose=False)
+	anime_data = pd.read_csv("data2/anime_cleaned.csv", sep=',')
+	anime_data, anime_features = preprocess_data(anime_data, verbose=True)
 	distances, indices = train_knn_model(anime_data, anime_features)
 	print('==========================================================')
 	print('Animes similar to Naruto')
