@@ -24,6 +24,7 @@ def preprocess_data(anime, verbose=True):
 	anime.loc[(anime['genre'] == 'Hentai') & (anime['episodes'] == 'Unknown'), 'episodes'] = '1'
 	anime.loc[(anime['type'] == 'Movie') & (anime['episodes'] == 'Unknown'), 'episodes'] = '1'
 
+	# Drop unnecesary data
 	anime.drop('title_synonyms', 1, inplace=True)
 	anime.drop('title_japanese', 1, inplace=True)
 	anime.drop('title_english', 1, inplace=True)
@@ -51,8 +52,8 @@ def preprocess_data(anime, verbose=True):
 	anime['members'] = anime['members'].astype(float)
 
 	anime.dropna(subset=['anime_id'], inplace=True)
-	print(anime.columns)
 	anime['anime_id'] = anime['anime_id'].astype(int)
+
 	# Scaling
 	anime['genre'] = anime['genre'].str.replace(" ", "")
 	anime_features = pd.concat([anime['genre'].str.get_dummies(sep=','),
@@ -113,7 +114,7 @@ def train_knn_model(anime_data, anime_features):
 
 
 if __name__ == '__main__':
-	anime_data = pd.read_csv("data2/anime_cleaned.csv", sep=',')
+	anime_data = pd.read_csv("data/anime_cleaned.csv", sep=',')
 	anime_data, anime_features = preprocess_data(anime_data, verbose=True)
 	distances, indices = train_knn_model(anime_data, anime_features)
 	print('==========================================================')
@@ -130,8 +131,8 @@ if __name__ == '__main__':
 	print_similar_animes(indices, anime_data, query='Gintama')
 	print('==========================================================')
 	print('Anime movies - Naruto')
-	print_similar_animes(indices, anime_data, id=719)
+	print_similar_animes(indices, anime_data, query='The Last: Naruto the Movie') #id=2472)
 	print('==========================================================')
 	print('Animes similar to Koutetsujou no Kabaneri')
-	print_similar_animes(indices, anime_data, id=1976)
+	print_similar_animes(indices, anime_data, query='Koutetsujou no Kabaneri') #id=28623)
 
