@@ -60,20 +60,25 @@ def geolocate(country):
 def create_world_map(dataframe, geolocator):
 	dataframe['Geolocate'] = dataframe['Country'].apply(geolocate)
 	dataframe[['Latitude', 'Longitude']] = pd.DataFrame(dataframe['Geolocate'].values.tolist(), index=dataframe.index)
-
+	print(dataframe.head())
 	#empty map
 	world_map = folium.Map(tiles="cartodbpositron")
 	marker_cluster = MarkerCluster().add_to(world_map)
 
+	user_sum = dataframe['Users'].sum()
+
 	#for each coordinate, create circle
 	for i in range(len(users_per_country)):
-	        lat = users_per_country.iloc[i]['Latitude']
-	        long = users_per_country.iloc[i]['Longitude']
+	        latitude = users_per_country.iloc[i]['Latitude']
+	        longitude = users_per_country.iloc[i]['Longitude']
 	        radius=5
+	        user_percentage = round((dataframe.iloc[i]['Users'] / user_sum) * 100, 2)
 	        popup_text = """Country : {}<br>
-	                    Number of Users : {}<br>"""
-	        popup_text = popup_text.format(countries[dataframe.iloc[i]['Country']], dataframe.iloc[i]['Users'])
-	        folium.CircleMarker(location = [lat, long], radius=radius, popup= popup_text, fill =True).add_to(marker_cluster)
+	                    Number of Users : {}<br>
+	                    Percentage of Users : {}<br>"""
+	        popup_text = popup_text.format(countries[dataframe.iloc[i]['Country']], dataframe.iloc[i]['Users'], user_percentage)
+	        popup = folium.Popup(html=popup_text, max_width=200)
+	        folium.CircleMarker(location = [latitude, longitude], radius=radius, popup=popup, fill =True).add_to(marker_cluster)
 
 	# Save map to html
 	world_map.save('world_map.html')
