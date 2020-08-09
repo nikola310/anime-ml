@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
 	location_data = location_data[location_data['country'].notna()]
 
-	users_per_country = pd.DataFrame(location_data['country_code'].value_counts()) #code
+	users_per_country = pd.DataFrame(location_data['country_code'].value_counts())
 	users_per_country.reset_index(inplace=True)
 	users_per_country = users_per_country.rename(columns = {'index':'Country', 'country_code':'Users'})
 	users_per_country['Country'] = users_per_country['Country'].str.upper()

@@ -12,6 +12,34 @@ def print_known_animes_and_current_episodes(known_anime_episodes, anime):
 		a = anime[anime['name'] == k]
 		print(f"Anime: { a.iloc[0]['name'] }, episodes: { a.iloc[0]['episodes']}")
 
+def get_scaled_features(anime, verbose=True):
+	anime['genre'] = anime['genre'].str.replace(" ", "")
+	anime_features = pd.concat([anime['genre'].str.get_dummies(sep=','),
+								pd.get_dummies(anime[['type']]),
+								pd.get_dummies(anime[['rating']]),
+								pd.get_dummies(anime[['source']]),
+								anime[['scored_by']],
+								anime[['rank']],
+								anime[['popularity']],
+								anime[['members']], anime[['favorites']],
+								anime[['duration_min']],
+								anime[['aired_from_year']], anime[['score']],
+								anime[['members']],
+								anime[['episodes']]],
+								axis=1)
+
+	if verbose:
+		print('==================Anime features==================')
+		print(anime_features.head())
+		print(anime_features.columns)
+
+	min_max_scaler = MinMaxScaler()
+	anime_features = min_max_scaler.fit_transform(anime_features)
+
+	if verbose:
+		print('==================Anime features after scaling==================')
+		print(np.round(anime_features, 2))
+
 def preprocess_data(anime, verbose=True):
 
 	if verbose:
@@ -54,33 +82,7 @@ def preprocess_data(anime, verbose=True):
 	anime.dropna(subset=['anime_id'], inplace=True)
 	anime['anime_id'] = anime['anime_id'].astype(int)
 
-	# Scaling
-	anime['genre'] = anime['genre'].str.replace(" ", "")
-	anime_features = pd.concat([anime['genre'].str.get_dummies(sep=','),
-								pd.get_dummies(anime[['type']]),
-								pd.get_dummies(anime[['rating']]),
-								pd.get_dummies(anime[['source']]),
-								anime[['scored_by']],
-								anime[['rank']],
-								anime[['popularity']],
-								anime[['members']], anime[['favorites']],
-								anime[['duration_min']],
-								anime[['aired_from_year']], anime[['score']],
-								anime[['members']],
-								anime[['episodes']]],
-								axis=1)
-
-	if verbose:
-		print('==================Anime features==================')
-		print(anime_features.head())
-		print(anime_features.columns)
-
-	min_max_scaler = MinMaxScaler()
-	anime_features = min_max_scaler.fit_transform(anime_features)
-
-	if verbose:
-		print('==================Anime features after scaling==================')
-		print(np.round(anime_features, 2))
+	anime_features = get_scaled_features(anime, verbose)
 
 	if verbose:
 		print('Dataset after preprocessing')
