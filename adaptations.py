@@ -38,17 +38,17 @@ def preprocess_data(anime, verbose=True):
 	return anime
 
 def get_json_object(json_string):
+	#TODO change to get ids, not urls
 	json_data = json.loads(json_string)
-	urls = []
+	ids = []
 	if isinstance(json_data, dict):
 		for key in json_data.keys():
 			
 			for related in json_data[key]:
 				try:
 					if related['type'] == 'manga':
-						#print(related['url'])
-						urls.append(related['url'])
-						#urls.append(related)
+						
+						ids.append(related['mal_id'])
 				except:
 					continue
 	else:
@@ -56,22 +56,24 @@ def get_json_object(json_string):
 			try:
 				if related['type'] == 'manga':
 					
-					urls.append(related['url'])
+					ids.append(related['ids'])
 			except:
 				continue
-	if not urls:
-		urls = np.nan
-	return urls
+	if not ids:
+		ids = np.nan
+	#if len(ids) > 1:
+	#	print(type(ids))
+	return ids
 
 def extract_related_manga_links(anime):
-	manga_links = anime['related'].apply(get_json_object)
-	return manga_links
+	manga_ids = anime['related'].apply(get_json_object)
+	return manga_ids
 
 if __name__ == '__main__':
 	anime_data = pd.read_csv("data/anime_cleaned.csv", sep=',')
 	anime_data = preprocess_data(anime_data, verbose=False)
-	anime_data['manga_links'] = extract_related_manga_links(anime_data)
+	anime_data['manga_ids'] = extract_related_manga_links(anime_data)
 
-	anime_data.dropna(subset=['manga_links'], inplace=True)
+	anime_data.dropna(subset=['manga_ids'], inplace=True)
 
-	anime_data.to_csv(path_or_buf='data/manga_links.csv', columns=['anime_id', 'manga_links'], index=False)
+	anime_data.to_csv(path_or_buf='data/manga_ids.tsv', sep='\t', columns=['anime_id', 'manga_ids'], index=False)
