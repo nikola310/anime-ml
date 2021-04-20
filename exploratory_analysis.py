@@ -19,10 +19,14 @@ if __name__ == "__main__":
     print('Mean number of episodes:', anime_data.episodes.mean())
     print('Median number of episodes:', anime_data.episodes.median())
 
-    print(anime_data)
-
     print('Mean number of minutes per episodes:', anime_data.duration_min.mean())
     print('Median number of minutes per episodes:', anime_data.duration_min.median())
 
     most_popular_anime = anime_data.loc[anime_data.members.idxmax()]
     print('Most popular anime', most_popular_anime.title, 'with', int(most_popular_anime.members), 'members on MAL')
+
+    oldest_anime = anime_data.loc[anime_data.aired_from_year.idxmin()]
+    print('Oldest anime is', oldest_anime.title, 'aired on', int(oldest_anime.aired_from_year))
+    print('')
+    print('Anime distribution per year')
+    #TODO seaborn plot
