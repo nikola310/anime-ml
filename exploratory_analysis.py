@@ -29,4 +29,10 @@ if __name__ == "__main__":
     print('Oldest anime is', oldest_anime.title, 'aired on', int(oldest_anime.aired_from_year))
     print('')
     print('Anime distribution per year')
-    #TODO seaborn plot
+
+    anime_data.aired_from_year = anime_data.aired_from_year.astype(int)
+
+    sns.set_theme(style="darkgrid")
+
+    ax = sns.countplot(x="aired_from_year", data=anime_data).set(title='Distribution of shows per year')
+    plt.show()
